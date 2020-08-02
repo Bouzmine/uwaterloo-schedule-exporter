@@ -8,7 +8,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://quest.pecs.uwaterloo.ca/*"],
+      "matches": ["https://academique-dmz.synchro.umontreal.ca/*"],
       "all_frames": true,
       "js": [
         "jquery-2.2.3.min.js",

@@ -57,26 +57,27 @@ function getDateTimeString(date, time) {
  * @return {String} formatted days of the week string ('MO,TU,WE,TH,FR')
  */
 function getDaysOfWeek(daysOfWeek) {
+  daysOfWeek = daysOfWeek.trim();
   var formattedDays = [];
-  if (daysOfWeek.match(/S[^a]/)) {
+  if (daysOfWeek == "Dim") { // ?
     formattedDays.push('SU');
   }
-  if (daysOfWeek.match(/M/)) {
+  if (daysOfWeek == "Lun") {
     formattedDays.push('MO');
   }
-  if (daysOfWeek.match(/T[^h]/)) {
+  if (daysOfWeek == "Ma") {
     formattedDays.push('TU');
   }
-  if (daysOfWeek.match(/W/)) {
+  if (daysOfWeek == "Mer") {
     formattedDays.push('WE');
   }
-  if (daysOfWeek.match(/Th/)) {
+  if (daysOfWeek == "J") {
     formattedDays.push('TH');
   }
-  if (daysOfWeek.match(/F/)) {
+  if (daysOfWeek == "V") {
     formattedDays.push('FR');
   }
-  if (daysOfWeek.match(/S[^u]/)) {
+  if (daysOfWeek == "Sa") { // ?
     formattedDays.push('SA');
   }
 
@@ -133,10 +134,19 @@ var main = function() {
       var component = $(this).find('span[id*="MTG_COMP"]').text();
 
       var prev = $(this).prev();
-      while (classNumber.length === 1) {
-        classNumber = prev.find('span[id*="DERIVED_CLS_DTL_CLASS_NBR"]').text();
-        section = prev.find('a[id*="MTG_SECTION"]').text();
-        component = prev.find('span[id*="MTG_COMP"]').text();
+      while ((classNumber == "" || section == "" || component == "") && prev.length > 0) {
+        if(classNumber == '') {
+          classNumber = prev.find('span[id*="DERIVED_CLS_DTL_CLASS_NBR"]').text();
+        }
+
+        if(section == '') {
+          section = prev.find('a[id*="MTG_SECTION"]').text();
+        }
+
+        if(component == '') {
+          component = prev.find('span[id*="MTG_COMP"]').text();
+        }
+
         prev = prev.prev();
       }
 
@@ -152,16 +162,25 @@ var main = function() {
         var instructor = $(this).find('span[id*="DERIVED_CLS_DTL_SSR_INSTR_LONG"]').text();
         var startEndDate = $(this).find('span[id*="MTG_DATES"]').text();
 
+        // Parse start/end dates like times to support one day (no end date) events better (e.g. exams)
+        var startEndDates = startEndDate.match(/\d{2}\/\d{2}\/\d{4}/g);
+        var startDateText = startEndDates[0];
+        if(startEndDates.length > 1) {
+          var endDateText = startEndDates[1];
+        }else {
+          var endDateText = startDateText;
+        }
+
         // Start the event one day before the actual start date, then exclude it in an exception date
         // rule. This ensures an event does not occur on startDate if startDate is not on part of daysOfWeek.
-        var startDate = moment(startEndDate.substring(0, 10), 'L').toDate();
+        var startDate = moment(startDateText, 'L').toDate();
         startDate.setDate(startDate.getDate() - 1);
 
         // End the event one day after the actual end date. Technically, the RRULE UNTIL field should
         // be the start time of the last occurrence of an event. However, since the field does not
         // accept a timezone (only UTC time) and Toronto is always behind UTC, we can just set the
         // end date one day after and be guaranteed that no other occurrence of this event.
-        var endDate = moment(startEndDate.substring(13, 23), 'L').toDate();
+        var endDate = moment(endDateText, 'L').toDate();
         endDate.setDate(endDate.getDate() + 1);
 
         var iCalContent =
@@ -171,16 +190,16 @@ var main = function() {
           'LOCATION:' + room + '\n' +
           'RRULE:FREQ=WEEKLY;UNTIL=' + getDateTimeString(endDate, endTime) + 'Z;BYDAY=' + daysOfWeek + '\n' +
           'EXDATE;TZID=' + timezone + ':' + getDateTimeString(startDate, startTime) + '\n' +
-          'SUMMARY:' + courseCode + ' (' + component + ') in ' + room + '\n' +
+          'SUMMARY:' + courseCode + ' (' + component + ')' + '\n' +
           'DESCRIPTION:' +
-            'Course Name: ' + courseName + '\\n' +
+            'Nom du cours: ' + courseName + '\\n' +
             'Section: ' + section + '\\n' +
-            'Instructor: ' + instructor + '\\n' +
-            'Component: ' + component + '\\n' +
-            'Class Number: ' + classNumber + '\\n' +
-            'Days/Times: ' + daysTimes + '\\n' +
-            'Start/End Date: ' + startEndDate + '\\n' +
-            'Location: ' + room + '\\n\n' +
+            'Instructeur: ' + instructor + '\\n' +
+            'Volet: ' + component + '\\n' +
+            'Numéro du cours: ' + classNumber + '\\n' +
+            'Jour/Heures: ' + daysTimes + '\\n' +
+            'Dates de début/fin: ' + startEndDate + '\\n' +
+            'Lieu: ' + room + '\\n\n' +
           'END:VEVENT\n';
 
         // Remove double spaces from content.
@@ -193,32 +212,34 @@ var main = function() {
   });
 
   // If no events were found, notify the user. Otherwise, proceed to download the ICS file.
-  if ($('.PATRANSACTIONTITLE').text().indexOf('Download') < 0) {
+  if ($('.gh-page-header-links-inner').html().indexOf('horaire') < 0) {
     if (numberOfEvents === 0) {
-      $('.PATRANSACTIONTITLE').append(' (<a href="#">Download Schedule</a>)').click(function() {
-        alert('Unable to create a schedule. No days or times were found on this page. Please make sure to be in List View.');
+      $('.gh-page-header-links-inner').append('<a href="#">Télécharger l\'horaire</a>').click(function() {
+        alert('Impossible de récupérer l\'horaire, assurez-vous d\'être en mode Liste');
         return false;
       });
     } else {
-      var studentName = $('#DERIVED_SSTSNAV_PERSON_NAME').text().toLowerCase();
+      var studentName = $('.gh-username').text().toLowerCase();
       studentName = studentName.replace(/\ /g, '-');  // Replace spaces with dashes.
-      var fileName = studentName + '-uw-class-schedule.ics';
+      var fileName = studentName + '-umontreal-class-schedule.ics';
 
-      $('.PATRANSACTIONTITLE').append(
-        ' (<a href="data:text/calendar;charset=UTF-8,' +
+      $('.gh-page-header-links-inner').append(
+        '<a href="data:text/calendar;charset=UTF-8,' +
         encodeURIComponent(wrapICalContent(iCalContentArray.join(''))) +
-        '" download="' + fileName + '">Download Schedule</a>)'
+        '" download="' + fileName + '">Télécharger l\'horaire</a>'
       );
     }
   }
 };
 
-$(document).ready(function() {
+$(document).ready(tryAddDownloadScheduleButton);
+
+function tryAddDownloadScheduleButton() {
   // Execute main function only when user is in the Enroll/my_class_schedule tab.
-  if ($('.PATRANSACTIONTITLE').text() === 'My Class Schedule') {
+  if ($('.PATRANSACTIONTITLE').text() === 'Votre horaire cours') {
     // Only display the download button when the user is in List View.
-    if ($('.PSRADIOBUTTON')[0].checked) {
+    if ($('input[name="DERIVED_REGFRM1_SSR_SCHED_FORMAT$258$"][value="L"]').is(":checked")) {
       main();
     }
   }
-});
+}
