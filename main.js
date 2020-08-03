@@ -212,22 +212,27 @@ var main = function() {
   });
 
   // If no events were found, notify the user. Otherwise, proceed to download the ICS file.
-  if ($('.gh-page-header-links-inner').html().indexOf('horaire') < 0) {
+  var linkContainer = $(".PSPAGECONTAINER .PAGROUPBOXLABELINVISIBLEWBO").closest("tr");
+  if (linkContainer.html().indexOf('Télécharger') < 0) {
     if (numberOfEvents === 0) {
-      $('.gh-page-header-links-inner').append('<a href="#">Télécharger l\'horaire</a>').click(function() {
+      var element = $('<tr><td><button type="button">Télécharger l\'horaire</button></td></tr>').click(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         alert('Impossible de récupérer l\'horaire, assurez-vous d\'être en mode Liste');
         return false;
       });
+      linkContainer.before(element);
     } else {
       var studentName = $('.gh-username').text().toLowerCase();
       studentName = studentName.replace(/\ /g, '-');  // Replace spaces with dashes.
       var fileName = studentName + '-umontreal-class-schedule.ics';
 
-      $('.gh-page-header-links-inner').append(
-        '<a href="data:text/calendar;charset=UTF-8,' +
+      var element = $('<tr><td><a href="data:text/calendar;charset=UTF-8,' +
         encodeURIComponent(wrapICalContent(iCalContentArray.join(''))) +
-        '" download="' + fileName + '">Télécharger l\'horaire</a>'
-      );
+        '" download="' + fileName + '">Télécharger l\'horaire</a></td></tr>').on("click", function(e) {
+          e.stopPropagation();
+        });
+      linkContainer.before(element);
     }
   }
 };
