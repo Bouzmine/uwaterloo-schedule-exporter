@@ -1,9 +1,6 @@
-# uwaterloo-schedule-exporter
+# umontreal-schedule-exporter
+Une façon facile d'exporter votre horaire à partir de [Synchro](https://academique-dmz.synchro.umontreal.ca/). Il suffit de télécharger ce projet GitHub en ZIP et le charger dans Chrome (dans *Extensions*, activer le *Mode développeur* et cliquer *Charger l'extension non empaquetée*). Ensuite, en naviguant dans **Centre Étudiant -> Études -> Inscription -> Votre horaire de cours**, vous devriez voir le bouton *Télécharger l'horaire* lorsque vous êtes dans l'onglet liste.
 
-![icon](https://cloud.githubusercontent.com/assets/7663987/9626057/a1ad3ef8-510f-11e5-9f85-4b16138bdffe.png)
+Cet outil est une adaptation de l'[extension de Baraa Hamodi](https://github.com/bhamodi/uwaterloo-schedule-exporter) qui permet d'exporter l'horaire d'étudiants de l'Université de Waterloo à partir du portail Quest (qui est basé sur le même logiciel que Synchro).
 
-Export your University of Waterloo class schedule directly from [Quest.](https://uwaterloo.ca/quest/)
-
-Simply head over to: **Academics -> Enroll -> My Class Schedule** and click on the **'Download Schedule'** button in the title. Be sure to be in **List View**.
-
-Get it now on the [Chrome Web Store!](https://chrome.google.com/webstore/detail/uwaterloo-schedule-export/epamhdpboimbcdgokgldffcdkfmbmajg)
+L'outil a été testé de façon superficielle et fonctionne pour mon utilisation personnelle, n'hésitez pas à soumettre une demande de correction de bogue dans l'onglet correspondant dans ce projet GitHub. Éventuellement, si tout me semble assez stable, je vais peut-être publier cet outil sur le Chrome Web Store comme l'a été l'extension originale créée par Baraa Hamodi.
